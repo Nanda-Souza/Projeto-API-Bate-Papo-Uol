@@ -103,7 +103,7 @@ server.post('/messages', async (req, res) => {
         return res.sendStatus(422)
     }
 
-    return res.sendStatus(200)
+    return res.sendStatus(201)
 
   });
 
