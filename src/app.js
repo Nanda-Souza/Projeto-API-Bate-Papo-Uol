@@ -24,7 +24,7 @@ server.use(cors())
 server.use(express.json());
 
 
-
+//Asynch is needed so we can use await on the db call functions
 server.post('/participants', async (req, res) => {
     const { name } = req.body;
 
@@ -35,15 +35,29 @@ server.post('/participants', async (req, res) => {
 
     //Execute the JOI validation, if it fails will return an error on validateParticipant
     const validateParticipant = participantSchema.validate({name}, { abortEarly: true })
-    console.log(validateParticipant)
+    
     //If theres and error 422 error is early returned
     if (validateParticipant.error) {
         return res.sendStatus(422)
       }
-
-    
-    return res.status(200).send("Post Validation is working!")
-    
+    //Try catch block 
+      try {
+    //Check if the choosen name is already in use by searching in the database
+        const loggedParticipant = await db.collection('participants').findOne({name})
+        //If the username is found on the database return a 409 error
+        if (loggedParticipant)
+            return res.status(409).send("Name already in use!")
+        
+        //Await for the above validations to be concluded so it can insert the new user
+        await db.collection('participants').insertOne({ 
+            name, 
+            lastStatus: Date.now() 
+        })
+        res.sendStatus(201);
+      } catch (error) {
+        console.error(error);
+        res.sendStatus(500);
+      }
   });
 
 
