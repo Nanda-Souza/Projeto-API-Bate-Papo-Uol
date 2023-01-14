@@ -3,6 +3,7 @@ import cors from "cors"
 import { MongoClient, ObjectId } from "mongodb";
 import dotenv from 'dotenv'
 import joi from 'joi'
+import dayjs from "dayjs"
 dotenv.config();
 
 
@@ -48,11 +49,19 @@ server.post('/participants', async (req, res) => {
         if (loggedParticipant)
             return res.status(409).send("Name already in use!")
         
-        //Await for the above validations to be concluded so it can insert the new user
+        //Await for the above validations to be concluded so it can insert the new user under participants collection
         await db.collection('participants').insertOne({ 
             name, 
             lastStatus: Date.now() 
         })
+        //Await for the above validations to be concluded so it can insert the new user under messages collection
+        await db.collection("messages").insertOne({
+            from: name,
+            to: 'Todos',
+            text: 'entra na sala...',
+            type: 'status',
+            time: dayjs().format("HH:mm:ss")
+        });
         res.sendStatus(201);
       } catch (error) {
         console.error(error);
