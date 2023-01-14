@@ -24,6 +24,7 @@ const server = express()
 server.use(cors())
 server.use(express.json());
 
+//Participants Methods
 //Function to get the participant list from the database
 server.get("/participants", (req, res) => {
     db.collection("participants").find().toArray().then(allParticipants => {
@@ -45,7 +46,7 @@ server.post('/participants', async (req, res) => {
     //Execute the JOI validation, if it fails will return an error on validateParticipant
     const validateParticipant = participantSchema.validate({name}, { abortEarly: true })
     
-    //If theres and error 422 error is early returned
+    //If theres any error a 422 error is early returned
     if (validateParticipant.error) {
         return res.sendStatus(422)
       }
@@ -75,6 +76,35 @@ server.post('/participants', async (req, res) => {
         console.error(error);
         res.sendStatus(500);
       }
+  });
+
+//Messages Methods
+server.post('/messages', async (req, res) => {
+    const { to, text, type } = req.body;
+    //Get the user value from the header and save in a from variable
+    const from = req.headers.user
+    
+    //JOI validation schema so {to, text, type} variables can be checked
+    const messageSchema = joi.object({
+        to: joi.string().required(),
+        text: joi.string().required(),
+        type: joi.string().valid("message", "private_message").required()
+    })
+
+    //Execute the JOI validation, if it fails will return an error on validateMessage
+    const validateMessage = messageSchema.validate({to, text, type}, { abortEarly: true })
+    
+    //Check if the user exists in the participants colllection
+    const validateFrom = await db.collection('participants').findOne({name: from})
+    
+    
+    //If theres any error or the user does not exist on the participants collection a 422 error is early returned
+    if (validateMessage.error || !validateFrom) {
+        return res.sendStatus(422)
+    }
+
+    return res.sendStatus(200)
+
   });
 
 
