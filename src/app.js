@@ -24,6 +24,14 @@ const server = express()
 server.use(cors())
 server.use(express.json());
 
+//Function to get the participant list from the database
+server.get("/participants", (req, res) => {
+    db.collection("participants").find().toArray().then(allParticipants => {
+      return res.status(200).send(allParticipants)
+    }).catch(() => {
+      res.status(500).send("Failed to get participants")
+    })
+  })
 
 //Asynch is needed so we can use await on the db call functions
 server.post('/participants', async (req, res) => {
