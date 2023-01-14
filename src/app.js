@@ -1,9 +1,21 @@
 import express from "express";
 import cors from "cors"
-import { MongoClient } from "mongodb";
+import { MongoClient, ObjectId } from "mongodb";
 import dotenv from 'dotenv'
-const mongoClient = new MongoClient()
 dotenv.config();
+
+
+//Setting the database connection string based on the environment variables from .env(dotenv)
+const mongoClient = new MongoClient(process.env.DATABASE_URL)
+let db;
+
+try{
+  await mongoClient.connect()
+  db = mongoClient.db()
+  console.log("Database connected successfully!") 
+} catch (error) {
+  console.log("Database connection error!")
+}
 
 const server = express()
 
