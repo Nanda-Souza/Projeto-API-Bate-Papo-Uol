@@ -37,7 +37,7 @@ server.get("/participants", (req, res) => {
 
 //Asynch is needed so we can use await on the db call functions
 server.post('/participants', async (req, res) => {
-    const name = stripHtml(req.body.name).result;
+    const { name } = req.body;
     
     //JOI validation schema so {name} variable can be required and of String type
     const participantSchema = joi.object({
@@ -53,20 +53,23 @@ server.post('/participants', async (req, res) => {
       }
     //Try catch block 
       try {
+
+        const sanitizedName = stripHtml(name).result
+
     //Check if the choosen name is already in use by searching in the database
-        const loggedParticipant = await db.collection('participants').findOne({name})
+        const loggedParticipant = await db.collection('participants').findOne({name: sanitizedName})
         //If the username is found on the database return a 409 error
         if (loggedParticipant)
             return res.status(409).send("Name already in use!")
         
         //Await for the above validations to be concluded so it can insert the new user under participants collection
         await db.collection('participants').insertOne({ 
-            name, 
+            name: sanitizedName, 
             lastStatus: Date.now() 
         })
         //Await for the above validations to be concluded so it can insert the new user under messages collection
         await db.collection("messages").insertOne({
-            from: name,
+            from: sanitizedName,
             to: 'Todos',
             text: 'entra na sala...',
             type: 'status',
