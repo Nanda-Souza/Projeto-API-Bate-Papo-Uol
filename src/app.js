@@ -126,7 +126,7 @@ server.post('/messages', async (req, res) => {
     const limit = req.query.limit
   
     if (limit && (isNaN(parseInt(limit)) || limit < 1) )
-        return res.status(400).send("Informe uma página válida!")
+        return res.status(422).send("Informe uma página válida!")
     
     db.collection("messages").find({
         $or: [
@@ -134,12 +134,13 @@ server.post('/messages', async (req, res) => {
             { $or: [ { to: user }, { to:"Todos" }]}
         ]
     }).toArray().then(filteredMessages => {
-      return res.status(200).send(filteredMessages)
+      return res.status(200).send(filteredMessages?.slice(-parseInt(limit)).reverse())
     }).catch(() => {
       res.status(500).send("Failed to get messages!")
     })
 
   })
+  //res.send(messages?.slice(-parseInt(limit)).reverse());
   //db.messages.find( { $or: [{ from:"Lavitz" }, {$or: [ {  to:"Lavitz" }, { to:"Todos" }]}]})
 
 const PORT = 5000
