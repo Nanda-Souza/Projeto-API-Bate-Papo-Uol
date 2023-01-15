@@ -166,6 +166,41 @@ server.post('/messages', async (req, res) => {
         res.sendStatus(500);
       }
   });
+
+async function removeInactive() {
+    //10 seconds prior now
+    const time = Date.now() - 10000;
+    
+    try {
+        const disconnect = await db.collection('participants').find({ 
+            lastStatus: { 
+                $lt: time 
+            } 
+        }).toArray()
+            
+        disconnect.map(async (p) => {
+            
+            await db.collection("messages").insertOne({
+                from: p.name,
+                to: 'Todos',
+                text: 'sai da sala...',
+                type: 'status',
+                time: dayjs().format("HH:mm:ss")
+            });
+        })
+        await db.collection("participants").deleteMany({ 
+            lastStatus: { 
+                $lt: time 
+            } 
+        });
+    } catch (error) {
+        console.error(error);
+        res.sendStatus(500);
+    }
+
+}
+
+setInterval(removeInactive, 15000)
   
 const PORT = 5000
 
