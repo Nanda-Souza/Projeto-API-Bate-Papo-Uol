@@ -140,9 +140,33 @@ server.post('/messages', async (req, res) => {
     })
 
   })
-  //res.send(messages?.slice(-parseInt(limit)).reverse());
-  //db.messages.find( { $or: [{ from:"Lavitz" }, {$or: [ {  to:"Lavitz" }, { to:"Todos" }]}]})
 
+  //Status Method
+
+  server.post('/status', async (req, res) => {
+    const user = req.headers.user
+
+    //Try catch block 
+      try {
+    //Check if the user exists in the database
+        const loggedParticipant = await db.collection('participants').findOne({ name:user })
+        //If the username is NOT found on the database return a 404 error
+        if (!loggedParticipant)
+            return res.status(404).send("User not found!")
+        
+        //Await for the above validations to be concluded so it can update the participant lastStatus
+        await db.collection('participants').updateOne( 
+            { name: user}, 
+            { $set: {lastStatus: Date.now() } } 
+        )
+        
+        res.sendStatus(200);
+      } catch (error) {
+        console.error(error);
+        res.sendStatus(500);
+      }
+  });
+  
 const PORT = 5000
 
 server.listen(PORT, () => console.log(`Server is up on port ${PORT}!!!`))
