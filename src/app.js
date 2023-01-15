@@ -103,7 +103,20 @@ server.post('/messages', async (req, res) => {
         return res.sendStatus(422)
     }
 
-    return res.sendStatus(201)
+    try {
+        //Await for the above validations to be concluded so it can insert the new user under messages collection
+        await db.collection("messages").insertOne({
+            from,
+            to,
+            text,
+            type,
+            time: dayjs().format("HH:mm:ss")
+        });
+        res.sendStatus(201);
+        } catch (error) {
+            console.error(error);
+            res.sendStatus(500);
+        }
 
   });
 
