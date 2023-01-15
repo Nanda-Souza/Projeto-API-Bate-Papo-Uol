@@ -37,8 +37,8 @@ server.get("/participants", (req, res) => {
 
 //Asynch is needed so we can use await on the db call functions
 server.post('/participants', async (req, res) => {
-    const { name } = req.body;
-
+    const name = stripHtml(req.body.name).result;
+    
     //JOI validation schema so {name} variable can be required and of String type
     const participantSchema = joi.object({
         name: joi.string().required()
