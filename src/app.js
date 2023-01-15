@@ -120,6 +120,27 @@ server.post('/messages', async (req, res) => {
 
   });
 
+  server.get("/messages", (req, res) => {
+    const user = req.headers.user
+    //query string in express "?limit=1"
+    const limit = req.query.limit
+  
+    if (limit && (isNaN(parseInt(limit)) || limit < 1) )
+        return res.status(400).send("Informe uma página válida!")
+    
+    db.collection("messages").find({
+        $or: [
+            { from: user },
+            { $or: [ { to: user }, { to:"Todos" }]}
+        ]
+    }).toArray().then(filteredMessages => {
+      return res.status(200).send(filteredMessages)
+    }).catch(() => {
+      res.status(500).send("Failed to get messages!")
+    })
+
+  })
+  //db.messages.find( { $or: [{ from:"Lavitz" }, {$or: [ {  to:"Lavitz" }, { to:"Todos" }]}]})
 
 const PORT = 5000
 
