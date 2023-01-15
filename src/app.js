@@ -4,6 +4,7 @@ import { MongoClient, ObjectId } from "mongodb";
 import dotenv from 'dotenv'
 import joi from 'joi'
 import dayjs from "dayjs"
+import { stripHtml } from "string-strip-html";
 dotenv.config();
 
 
@@ -120,7 +121,7 @@ server.post('/messages', async (req, res) => {
 
   });
 
-  server.get("/messages", (req, res) => {
+  server.get("/messages", async (req, res) => {
     const user = req.headers.user
     //query string in express "?limit=1"
     const limit = req.query.limit
@@ -128,16 +129,20 @@ server.post('/messages', async (req, res) => {
     if (limit && (isNaN(parseInt(limit)) || limit < 1) )
         return res.status(422).send("Informe uma página válida!")
     
-    db.collection("messages").find({
-        $or: [
-            { from: user },
-            { $or: [ { to: user }, { to:"Todos" }]}
-        ]
-    }).toArray().then(filteredMessages => {
-      return res.status(200).send(filteredMessages?.slice(-parseInt(limit)).reverse())
-    }).catch(() => {
-      res.status(500).send("Failed to get messages!")
-    })
+    try{
+        await db.collection("messages").find({
+            $or: [
+                { from: user },
+                { $or: [ { to: user }, { to:"Todos" }]}
+            ]
+        }).toArray().then(filteredMessages => {
+          return res.status(200).send(filteredMessages?.slice(-parseInt(limit)).reverse())
+        })
+
+    }catch (error) {
+        console.error(error);
+        res.sendStatus(500);
+    }
 
   })
 
@@ -201,7 +206,9 @@ async function removeInactive() {
 }
 
 setInterval(removeInactive, 15000)
-  
+
+
+
 const PORT = 5000
 
 server.listen(PORT, () => console.log(`Server is up on port ${PORT}!!!`))
