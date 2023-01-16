@@ -98,6 +98,7 @@ server.post('/messages', async (req, res) => {
     //Execute the JOI validation, if it fails will return an error on validateMessage
     const validateMessage = messageSchema.validate({to, text, type}, { abortEarly: true })
     
+    
     //Check if the user exists in the participants colllection
     const validateFrom = await db.collection('participants').findOne({name: from})
     
@@ -110,10 +111,10 @@ server.post('/messages', async (req, res) => {
     try {
         //Await for the above validations to be concluded so it can insert the new user under messages collection
         await db.collection("messages").insertOne({
-            from,
-            to,
-            text,
-            type,
+            from: stripHtml(from).result,
+            to: stripHtml(to).result,
+            text: stripHtml(text).result,
+            type: stripHtml(type).result,
             time: dayjs().format("HH:mm:ss")
         });
         res.sendStatus(201);
@@ -208,7 +209,7 @@ async function removeInactive() {
 
 }
 
-setInterval(removeInactive, 15000)
+//setInterval(removeInactive, 15000)
 
 
 
