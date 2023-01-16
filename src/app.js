@@ -209,7 +209,7 @@ async function removeInactive() {
 
 }
 
-//setInterval(removeInactive, 15000)
+setInterval(removeInactive, 15000)
 
 
 
